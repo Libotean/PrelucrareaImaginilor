@@ -111,7 +111,6 @@ def read_bmp(file_path):
 
         return pixels, width, abs_height, bit_count
 
-
 def open_image():
     file_path = filedialog.askopenfilename(
         title="Select a BMP Image",
@@ -318,17 +317,6 @@ def clear_analysis():
     for widget in frame_analysis.winfo_children():
         widget.destroy()
 
-def matrice_covarianta(mu20, mu02, mu11):
-    cov = [
-        [mu20, mu11],
-        [mu11, mu02]
-    ]
-    print("\nMatricea de covarianta:")
-    print(f"[ {mu20:.2f}   {mu11:.2f} ]")
-    print(f"[ {mu11:.2f}   {mu02:.2f} ]")
-
-    return cov
-
 def calcul_momente_imagine(matrix):
 
     # ordin 1
@@ -345,9 +333,45 @@ def calcul_momente_imagine(matrix):
     
     m_x = sumax_intensitatii / suma_intensitatii
     m_y = sumay_intensitatii / suma_intensitatii
-    return m_x, m_y
 
-def calcul_proiectii(bin_matrix):
+    # ordin 2
+    sumaxx = 0
+    sumayy = 0
+    sumaxy = 0
+    for y,row in enumerate(matrix):
+        for x, pixel in enumerate(row):
+            r, g, b = pixel[0], pixel[1], pixel[2]
+            intensitate = 0.299*r + 0.587*g + 0.114*b
+            sumaxx += (x - m_x)**2 * intensitate
+            sumayy += (y - m_y)**2 * intensitate
+            sumaxy += (x - m_x) * (y - m_y) * intensitate
+
+    M_xx = sumaxx / suma_intensitatii
+    M_yy = sumayy / suma_intensitatii
+    M_xy = sumaxy / suma_intensitatii
+    unghi_rad = 0.5 * math.atan2(2 * M_xy, M_xx - M_yy)
+    unghi_grade = math.degrees(unghi_rad)
+    return m_x, m_y, M_xx, M_yy, M_xy, unghi_rad, unghi_grade
+
+def show_momente():
+    if matrix is None: return
+    clear_analysis()
+    m_x, m_y, M_xx, M_yy, M_xy, unghi_rad, unghi_grade = calcul_momente_imagine(matrix)
+    text = tk.Text(frame_analysis, font=("Courier", 11))
+    text.pack(fill="both", expand=True)
+    text.insert("end", f"Centru de masa: m_x = {m_x:.2f}, m_y = {m_y:.2f}\n")
+    text.insert("end", f"Momente de ordin 2: M_xx = {M_xx:.2f}, M_yy = {M_yy:.2f}\n")
+    text.insert("end", f"Momentul de covarianta: M_xy = {M_xy:.2f}\n")
+    text.insert("end", f"Orientare (radiani): {unghi_rad:.2f}\n")
+    text.insert("end", f"Orientare (grade): {unghi_grade:.2f}\n")
+    text.insert("end", f"\nMatricea de covarianta:\n")
+    text.insert("end", f"| {M_xx:.2f}  {M_xy:.2f} |\n")
+    text.insert("end", f"| {M_xy:.2f}  {M_yy:.2f} |\n")
+    text.config(state="disabled")
+    
+
+def calcul_proiectii(bin_matrix):  
+    clear_analysis() 
     h = len(bin_matrix)
     w = len(bin_matrix[0])
     
@@ -359,19 +383,18 @@ def calcul_proiectii(bin_matrix):
             if bin_matrix[y][x][0] == 255:
                 proiectie_H[y] += 1
                 proiectie_V[x] += 1
-    
-    plt.figure("Proiectii")
-    
-    plt.subplot(2, 1, 1)
-    plt.plot(proiectie_H, color='blue')
-    plt.title("Proiectia pe Orizontala (Linii)")
-    
-    plt.subplot(2, 1, 2)
-    plt.plot(proiectie_V, color='red')
-    plt.title("Proiectia pe Verticala (Coloane)")
-    
-    plt.tight_layout()
-    plt.show()
+        
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3))
+    ax1.plot(proiectie_H, color='blue')
+    ax1.set_title("Proiectie orizontala")
+
+    ax2.plot(proiectie_V, color='red')
+    ax2.set_title("Proiectie verticala")
+
+    canvas_mpl = FigureCanvasTkAgg(fig, master=frame_analysis)
+    canvas_mpl.draw()
+    canvas_mpl.get_tk_widget().pack(fill="both", expand=True)
+    plt.close(fig)
 
 def afiseaza(mat, canvas):
     arr = np.array(mat, dtype=np.uint8)
@@ -432,7 +455,7 @@ menubar.add_cascade(label="Efecte", menu=menu_efecte)
 # analiza
 menu_analiza = tk.Menu(menubar, tearoff=0)
 menu_analiza.add_command(label="Histograma", command=lambda: show_histogram(matrix))
-menu_analiza.add_command(label="Momente", command=lambda: calcul_momente(binarize(matrix)))
+menu_analiza.add_command(label="Momente", command=show_momente)
 menu_analiza.add_command(label="Proiectii", command=lambda: calcul_proiectii(binarize(matrix)))
 menubar.add_cascade(label="Analiza", menu=menu_analiza)
 root.config(menu=menubar)
@@ -448,7 +471,7 @@ canvas_2.pack(side="left", padx=5, pady=5)
 
 frame_analysis = tk.Frame(root, height=250, bg="#1e1e1e")
 frame_analysis.pack(fill="x", padx=5, pady=5)
-frame_analysis.pack_propagate(False)  # mentine inaltimea fixa chiar daca e gol
+frame_analysis.pack_propagate(False) 
 
 status_var = tk.StringVar(value="Niciun fisier deschis")
 
