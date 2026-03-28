@@ -1,4 +1,16 @@
 def mod_gray(matrix, method):
+    """Transforma o imagine RGB in nunante de gri folosind trei metode diferite.
+
+    Args:
+        matrix (list[list[list[int]]]): Imaginea sursa RGB.
+        method (int): Selector pentru algoritm:
+            1 - Media aritmetica simpla.
+            2 - Metoda luminantei - conform perceptiei umane.
+            3 - Metoda desaturarii - media dintre min si max.
+
+    Returns:
+        list[list[list[int]]]: Imaginea in nuante de gri (R=G=B).
+    """
     res = [] 
     for row in matrix:
         new_row = []
@@ -15,6 +27,14 @@ def mod_gray(matrix, method):
     return res
 
 def convert_cmyk(matrix):
+    """Converteste o imagine din spatiul de culoare RGB in CMY.
+
+    Args:
+        matrix (list[list[list[int]]]): Imaginea sursa RGB.
+
+    Returns:
+        list[list[list[int]]]: Imaginea convertita.
+    """
     res = []
     for row in matrix:
         new_row = []
@@ -35,23 +55,41 @@ def convert_cmyk(matrix):
     return res
 
 def convert_yuv(matrix):
+    """Converteste imaginea din spatiul de culoare RGB in YUV.
+    Y reprezinta luminanta, iar U si V reprezinta crominanta. 
+    Valorile U si V sunt shiftate cu +128 pentru a fi reprezentate in intervalul [0, 255].
+
+    Args:
+        matrix (list[list[list[int]]]): Imaginea sursa RGB.
+
+    Returns:
+        list[list[list[int]]]: Imaginea in format YUV (Y, U+128, V+128).
+    """
     res = []
     for row in matrix:
         new_row = []
         for pixel in row:
             r, g, b = pixel[0], pixel[1], pixel[2]
             y = 0.3*r + 0.6*g + 0.1*b 
-            u = 0.74*(r-y) + 0.27*(b-y) # pot as fie valori negative
-            v = 0.48*(r-y) + 0.41*(b-y) # pot sa fie valori negative
+            u = 0.74*(r-y) + 0.27*(b-y)
+            v = 0.48*(r-y) + 0.41*(b-y)
             new_row.append([
                 int(max(0, min(255, y))),
                 int(max(0, min(255, u + 128))),
                 int(max(0, min(255, v + 128)))
-            ]) # spre exemplu -10 devine 246
+            ])
         res.append(new_row)
     return res
 
 def convert_yCbCr(matrix):
+    """Converteste imaginea in spatiul YCbCr.
+
+    Args:
+        matrix (list[list[list[int]]]): Imaginea sursa RGB.
+
+    Returns:
+        list[list[list[int]]]: Imaginea convertita.
+    """
     res = []
     for row in matrix:
         new_row = []
@@ -69,6 +107,14 @@ def convert_yCbCr(matrix):
     return res
 
 def convert_hsv(matrix):
+    """Converteste imaginea din RGB in spatiul HSV (Hue, Saturation, Value).
+
+    Args:
+        matrix (list[list[list[int]]]): Imaginea sursa RGB.
+
+    Returns:
+        list[list[list[int]]]: Imaginea HSV cu valorile normalizate la intervalul [0, 255].
+    """
     res = []
     for row in matrix:
         new_row = []
@@ -78,6 +124,7 @@ def convert_hsv(matrix):
             m = min(r,g,b)
             C = M-m
 
+            # value
             V = M
             # saturatie
             S = C/V if V != 0 else 0

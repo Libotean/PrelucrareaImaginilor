@@ -51,14 +51,13 @@ def show_invert(option):
         inv_matrix = inversare(matrix)
         afiseaza(inv_matrix, canvas_2)
     else:
+        channel_map = {2: 'r', 3: 'g', 4: 'b'}
         if inv_matrix is None:
             return
-        if option == 2:
-            afiseaza(get_channel(inv_matrix, 0), canvas_2)
-        elif option == 3:
-            afiseaza(get_channel(inv_matrix, 1), canvas_2) 
-        elif option == 4:
-            afiseaza(get_channel(inv_matrix, 2), canvas_2)
+        if option in channel_map:
+            idx = channel_map[option]
+            canal_img = get_channel(inv_matrix, idx)
+            afiseaza(canal_img, canvas_2)
 
 def clear_analysis():
     for widget in frame_analysis.winfo_children():

@@ -1,6 +1,16 @@
 import math
 
 def calcul_histograma(matrix):
+    """Calculeaza histograma de intensitate a unei imagini.
+    Numara frecvente de aparitie a fiecarei nuante de gri din imagine.
+    Foloseste media aritmetica simpla pentru conversia interna in grayscale.
+
+    Args:
+        matrix (list[list[list[int]]]): Imaginea sursa RGB.
+
+    Returns:
+        list[int]: O lista de 256 de elemente unde indexul reprezinta intensitatea, iar valoarea numarul de pixeli.
+    """
     hist = [0] * 256
     for row in matrix:
         for pixel in row:
@@ -9,7 +19,17 @@ def calcul_histograma(matrix):
     return hist
 
 def calcul_momente_imagine(matrix):
+    """Calculeaza momentele de ordin 1 si 2 ale imaginii.
 
+    Args:
+        matrix (list[list[list[int]]]): Imaginea sursa RGB.
+
+    Returns:
+        tuple: (m_x, m_y, M_xx, M_yy, M_xy, unghi_rad, unghi_grade)
+            - m_x, m_y: coordonatele centrului de greutate.
+            - M_xx, M_yy, M_xy: momentele de ordin 2.
+            - unghi_rad/grade: orientarea axei principale a imaginii.
+    """
     # ordin 1
     suma_intensitatii = 0
     sumax_intensitatii = 0
@@ -45,7 +65,17 @@ def calcul_momente_imagine(matrix):
     return m_x, m_y, M_xx, M_yy, M_xy, unghi_rad, unghi_grade
 
 def calcul_proiectii(bin_matrix):  
-    
+    """Genereaza proiectiile pe axele orizontala si verticala ale unei imagini.
+    Este utila pentru detectarea limitelor obiectelor sau segmentarea textului.
+
+    Args:
+        bin_matrix (list[list[list[int]]]): Imaginea binarizata.
+
+    Returns:
+        tuple: (proiectie_H, proiectie_V)
+            - proiectie_H: Lista cu suma pixelilor albi pe fiecare rand.
+            - proiectie_V: Lista cu suma pixelilor albi pe fiecare coloana. 
+    """
     h = len(bin_matrix)
     w = len(bin_matrix[0])
     

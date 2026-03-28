@@ -1,6 +1,26 @@
 import struct
 
 def read_bmp(file_path):
+    """
+    Citeste un fisier imagine BMP si extrage matricea de pixeli in format RGB.
+
+    Funcsia parseaza structura binara a formatului BMP (Windows Bitmap), 
+    suportand adâncimi de culoare de 4, 8, 16, 24 si 32 biti, precum si 
+    imagini stocate Bottom-Up sau Top-Down.
+
+    Args:
+        file_path (str): Calea catre fisierul .bmp.
+
+    Returns:
+        tuple: (pixels, width, height, bit_count)
+            - pixels: list[list[list[int]]] - Matricea de pixeli RGB.
+            - width: int - Latimea imaginii.
+            - height: int - Inaltimea imaginii.
+            - bit_count: int - Adancimea de culoare detectata.
+
+    Raises:
+        ValueError: Daca fisierul nu este un BMP valid sau are un format nesuportat.
+    """
     with open(file_path, 'rb') as f:
         file_header = f.read(14)
         if len(file_header) < 14:
