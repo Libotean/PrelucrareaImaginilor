@@ -1,9 +1,12 @@
+import math
 from image_io import read_bmp
 from conversions import mod_gray, convert_cmyk, convert_yuv, convert_yCbCr, convert_hsv
 from effects import inversare, binarize, get_channel
 from analysis import calcul_histograma, calcul_momente_imagine, calcul_proiectii
+from etichetare import directie_alungire, etichetare, extrage_obiect
 
 import tkinter as tk
+import tkinter.ttk as ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog
@@ -12,6 +15,8 @@ from PIL import Image, ImageTk
 
 matrix = None
 inv_matrix = None
+labels_matrix  = None
+num_labels_val = 0 
 
 def open_image():
     file_path = filedialog.askopenfilename(
@@ -117,6 +122,38 @@ def afiseaza(mat, canvas):
     canvas.create_image(300, 300, anchor="center", image=imgtk)
     canvas.image = imgtk
 
+def show_orientation():
+    clear_analysis()
+    orientare_rad, orientare_deg = directie_alungire(matrix)
+    text = tk.Text(frame_analysis, font=("Courier", 11))
+    text.pack(fill="both", expand=True)
+    text.insert("end", f"Directia de alungire (radiani): {orientare_rad:.2f}\n")
+    text.insert("end", f"Directia de alungire (grade): {orientare_deg:.2f}\n")
+    text.config(state="disabled")
+
+def aplica_etichetare():
+    global labels_matrix, num_labels_val
+
+    imagine_colorata, labels_matrix, num_labels_val = etichetare(matrix)
+    afiseaza(imagine_colorata, canvas_2)
+
+    # Actualizeaza optiunile din dropdown
+    optiuni = [str(i) for i in range(1, num_labels_val + 1)]
+    dropdown_etichete["values"] = optiuni
+    if optiuni:
+        dropdown_etichete.current(0)
+
+def selectie_obiect(event=None):
+    if labels_matrix is None:
+        return
+
+    eticheta = int(dropdown_etichete.get())
+    obiect   = extrage_obiect(matrix, labels_matrix, eticheta)
+    afiseaza(obiect, canvas_2)
+
+    unghi_rad, unghi_grade = directie_alungire(obiect)
+    label_unghi.config(text=f"Directie alungire: {unghi_grade:.2f}° ({unghi_rad:.4f} rad)")
+
 def center_window():
     root.update_idletasks()
     w = root.winfo_width()
@@ -169,7 +206,23 @@ menu_analiza.add_command(label="Histograma", command=show_histogram)
 menu_analiza.add_command(label="Momente", command=show_momente)
 menu_analiza.add_command(label="Proiectii", command=show_proiectii)
 menubar.add_cascade(label="Analiza", menu=menu_analiza)
+
+# etichetare (lab5)
+menu_etichetare = tk.Menu(menubar, tearoff=0)
+menu_etichetare.add_command(label="Directia de alungire", command=show_orientation)
+menu_etichetare.add_command(label="Etichetare", command=aplica_etichetare)
+menubar.add_cascade(label="Etichetare", menu=menu_etichetare)
+
 root.config(menu=menubar)
+
+frame_etichetare = tk.Frame(root)
+frame_etichetare.pack()
+
+dropdown_etichete = ttk.Combobox(frame_etichetare, width=10, state="readonly")
+dropdown_etichete.pack(side="left", padx=5)
+dropdown_etichete.bind("<<ComboboxSelected>>", selectie_obiect)
+label_unghi = tk.Label(root, text="Directie alungire: -")
+label_unghi.pack()
 
 frame_poze = tk.Frame(root)
 frame_poze.pack()
