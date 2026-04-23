@@ -67,3 +67,116 @@ def binarize(matrix, threshold=127):
             new_row.append([val, val, val])
         res.append(new_row)
     return res
+
+def apply_neighbor_filter(matrix, filter_type='mean'):
+    height = len(matrix)
+    width = len(matrix[0])
+    new_matrix = [ [[0,0,0] for _ in range(width)] for _ in range(height)]
+
+    for y in range(1, height - 1):
+        for x in range(1, width - 1):
+            neighbors = []
+            for ky in range(-1, 2):
+                for kx in range(-1, 2):
+                    neighbors.append(matrix[y + ky][x + kx][0])
+            
+            if filter_type == 'mean':
+                res = sum(neighbors) // 9
+            elif filter_type == 'median':
+                neighbors.sort()
+                res = neighbors[4]
+            elif filter_type == 'min':
+                res = min(neighbors)
+            elif filter_type == 'max':
+                res = max(neighbors)
+            
+            new_matrix[y][x] = [res, res, res]
+            
+    return new_matrix
+
+def apply_sharpen(matrix):
+    height = len(matrix)
+    width = len(matrix[0])
+    new_matrix = [ [[0,0,0] for _ in range(width)] for _ in range(height)]
+    
+    v = [
+        [0, -0.25, 0],
+        [-0.25, 1, -0.25],
+        [0, -0.25, 0]
+    ]
+    
+    for y in range(1, height - 1):
+        for x in range(1, width - 1):
+            sum_r = 0
+            for ky in range(-1, 2):
+                for kx in range(-1, 2):
+                    sum_r += v[ky+1][kx+1] * matrix[y+ky][x+kx][0]
+            
+            orig_r = matrix[y][x][0]
+            new_r = int(orig_r + 0.6 * sum_r)
+            
+            new_r = max(0, min(255, new_r))
+            new_matrix[y][x] = [new_r, new_r, new_r]
+            
+    return new_matrix
+
+def apply_neighbor_filter_color(matrix, filter_type='mean'):
+    height = len(matrix)
+    width = len(matrix[0])
+    new_matrix = [[[0, 0, 0] for _ in range(width)] for _ in range(height)]
+
+    for y in range(1, height - 1):
+        for x in range(1, width - 1):
+            new_pixel = [0, 0, 0]
+            
+            for c in range(3):
+                neighbors = []
+                for ky in range(-1, 2):
+                    for kx in range(-1, 2):
+                        neighbors.append(matrix[y + ky][x + kx][c])
+                
+                if filter_type == 'mean':
+                    res = sum(neighbors) // 9
+                elif filter_type == 'median':
+                    neighbors.sort()
+                    res = neighbors[4]
+                elif filter_type == 'min':
+                    res = min(neighbors)
+                elif filter_type == 'max':
+                    res = max(neighbors)
+                
+                new_pixel[c] = res
+            
+            new_matrix[y][x] = new_pixel
+            
+    return new_matrix
+
+def apply_sharpen_color(matrix):
+    height = len(matrix)
+    width = len(matrix[0])
+    new_matrix = [[[0, 0, 0] for _ in range(width)] for _ in range(height)]
+    
+    v = [
+        [0, -0.25, 0],
+        [-0.25, 1, -0.25],
+        [0, -0.25, 0]
+    ]
+    
+    for y in range(1, height - 1):
+        for x in range(1, width - 1):
+            new_pixel = [0, 0, 0]
+            
+            for c in range(3):
+                sum_val = 0
+                for ky in range(-1, 2):
+                    for kx in range(-1, 2):
+                        sum_val += v[ky+1][kx+1] * matrix[y+ky][x+kx][c]
+                
+                orig_val = matrix[y][x][c]
+                res = int(orig_val + 0.6 * sum_val)
+                
+                new_pixel[c] = max(0, min(255, res))
+            
+            new_matrix[y][x] = new_pixel
+            
+    return new_matrix

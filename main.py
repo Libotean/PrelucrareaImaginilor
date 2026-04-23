@@ -1,8 +1,8 @@
 import math
 from image_io import read_bmp
 from conversions import mod_gray, convert_cmyk, convert_yuv, convert_yCbCr, convert_hsv
-from effects import inversare, binarize, get_channel
-from analysis import calcul_histograma, calcul_momente_imagine, calcul_proiectii
+from effects import inversare, binarize, get_channel, apply_neighbor_filter, apply_sharpen, apply_neighbor_filter_color, apply_sharpen_color
+from analysis import calcul_histograma, calcul_momente_imagine, calcul_proiectii, equalize_histogram, apply_morphology, opening, closing, apply_fourier
 from etichetare import directie_alungire, etichetare, extrage_obiect
 
 import tkinter as tk
@@ -36,17 +36,27 @@ def open_image():
         afiseaza(matrix, canvas_original)
         canvas_2.delete('all')
         clear_analysis()
+
+        frame_etichetare.pack_forget()
+        label_unghi.pack_forget()
+
+        global labels_matrix, num_labels_val
+        labels_matrix = None
+        num_labels_val = 0
     except Exception as e:
         print(f"Error: {e}")
 
 def resetare():
-    global inv_matrix, matrix
+    global inv_matrix, matrix, labels_matrix
     canvas_2.delete('all')
+    canvas_original.delete('all')
     clear_analysis()
     status_var.set("Niciun fisier deschis.")
     inv_matrix = None
     matrix = None
-    canvas_original.delete('all')
+    labels_matrix = None
+    frame_etichetare.pack_forget()
+    label_unghi.pack_forget()
 
 def show_invert(option):
     global inv_matrix
@@ -67,7 +77,7 @@ def show_invert(option):
 def clear_analysis():
     for widget in frame_analysis.winfo_children():
         widget.destroy()
-
+    
 def show_histogram():
     clear_analysis()
     hist = calcul_histograma(matrix)
@@ -137,6 +147,9 @@ def aplica_etichetare():
     imagine_colorata, labels_matrix, num_labels_val = etichetare(matrix)
     afiseaza(imagine_colorata, canvas_2)
 
+    frame_etichetare.pack(before=frame_poze)
+    label_unghi.pack(after=frame_etichetare)
+
     # Actualizeaza optiunile din dropdown
     optiuni = [str(i) for i in range(1, num_labels_val + 1)]
     dropdown_etichete["values"] = optiuni
@@ -153,6 +166,29 @@ def selectie_obiect(event=None):
 
     unghi_rad, unghi_grade = directie_alungire(obiect)
     label_unghi.config(text=f"Directie alungire: {unghi_grade:.2f}° ({unghi_rad:.4f} rad)")
+
+def show_equalization():
+    if matrix is None: return
+    res = equalize_histogram(matrix, len(matrix[0]), len(matrix))
+    afiseaza(res, canvas_2)
+
+def show_morphology(op_type):
+    if matrix is None: return
+    
+    kernel = [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
+    
+    bin_img = binarize(matrix)
+    if op_type == "dilate":
+        res = apply_morphology(bin_img, kernel, mode='dilate')
+    elif op_type == "erode":
+        res = apply_morphology(bin_img, kernel, mode='erode')
+    elif op_type == "open":
+        res = opening(bin_img, kernel)
+    elif op_type == "close":
+        res = closing(bin_img, kernel)
+
+        
+    afiseaza(res, canvas_2)
 
 def center_window():
     root.update_idletasks()
@@ -191,6 +227,12 @@ menubar.add_cascade(label="Conversii", menu=menu_conversii)
 # efecte
 menu_efecte = tk.Menu(menubar, tearoff=0)
 menu_efecte.add_command(label="Binarizare", command=lambda: afiseaza(binarize(matrix), canvas_2))
+menu_morfologie = tk.Menu(menu_efecte, tearoff=0)
+menu_morfologie.add_command(label="Dilatare", command=lambda: show_morphology("dilate"))
+menu_morfologie.add_command(label="Eroziune", command=lambda: show_morphology("erode"))
+menu_morfologie.add_command(label="Deschidere (Opening)", command=lambda: show_morphology("open"))
+menu_morfologie.add_command(label="Inchidere (Closing)", command=lambda: show_morphology("close"))
+menu_efecte.add_cascade(label="Morfologie Binara", menu=menu_morfologie)
 menu_inversare = tk.Menu(menu_efecte, tearoff=0)
 menu_inversare.add_command(label="Afiseaza inversata", command=lambda: show_invert(1))
 menu_inversare.add_command(label="Canal R", command=lambda: show_invert(2))
@@ -203,26 +245,44 @@ menubar.add_cascade(label="Efecte", menu=menu_efecte)
 # analiza
 menu_analiza = tk.Menu(menubar, tearoff=0)
 menu_analiza.add_command(label="Histograma", command=show_histogram)
+menu_analiza.add_command(label="Egalizare Histograma", command=show_equalization)
 menu_analiza.add_command(label="Momente", command=show_momente)
 menu_analiza.add_command(label="Proiectii", command=show_proiectii)
+menu_analiza.add_command(label="Transformata Fourier", command=lambda: afiseaza(apply_fourier(matrix), canvas_2))
 menubar.add_cascade(label="Analiza", menu=menu_analiza)
 
-# etichetare (lab5)
+# etichetare
 menu_etichetare = tk.Menu(menubar, tearoff=0)
 menu_etichetare.add_command(label="Directia de alungire", command=show_orientation)
 menu_etichetare.add_command(label="Etichetare", command=aplica_etichetare)
 menubar.add_cascade(label="Etichetare", menu=menu_etichetare)
 
+# filtre
+menu_filtre = tk.Menu(menu_efecte, tearoff=0)
+menu_filtre.add_command(label="Mediere (Mean)", command=lambda: afiseaza(apply_neighbor_filter(matrix, 'mean'), canvas_2))
+menu_filtre.add_command(label="Median", command=lambda: afiseaza(apply_neighbor_filter(matrix, 'median'), canvas_2))
+menu_filtre.add_command(label="Minim", command=lambda: afiseaza(apply_neighbor_filter(matrix, 'min'), canvas_2))
+menu_filtre.add_command(label="Maxim", command=lambda: afiseaza(apply_neighbor_filter(matrix, 'max'), canvas_2))
+menu_filtre.add_command(label="Accentuare (Sharpen)", command=lambda: afiseaza(apply_sharpen(matrix), canvas_2))
+menu_efecte.add_cascade(label="Filtre Spatiale", menu=menu_filtre)
+menu_filtre_color = tk.Menu(menu_efecte, tearoff=0)
+menu_filtre_color.add_command(label="Mediere (Mean)", command=lambda: afiseaza(apply_neighbor_filter_color(matrix, 'mean'), canvas_2))
+menu_filtre_color.add_command(label="Median", command=lambda: afiseaza(apply_neighbor_filter_color(matrix, 'median'), canvas_2))
+menu_filtre_color.add_command(label="Minim", command=lambda: afiseaza(apply_neighbor_filter_color(matrix, 'min'), canvas_2))
+menu_filtre_color.add_command(label="Maxim", command=lambda: afiseaza(apply_neighbor_filter_color(matrix, 'max'), canvas_2))
+menu_filtre_color.add_command(label="Accentuare (Sharpen)", command=lambda: afiseaza(apply_sharpen_color(matrix), canvas_2))
+menu_efecte.add_cascade(label="Filtre Spatiale color", menu=menu_filtre_color)
+
 root.config(menu=menubar)
 
 frame_etichetare = tk.Frame(root)
-frame_etichetare.pack()
+# frame_etichetare.pack()
 
 dropdown_etichete = ttk.Combobox(frame_etichetare, width=10, state="readonly")
 dropdown_etichete.pack(side="left", padx=5)
 dropdown_etichete.bind("<<ComboboxSelected>>", selectie_obiect)
+
 label_unghi = tk.Label(root, text="Directie alungire: -")
-label_unghi.pack()
 
 frame_poze = tk.Frame(root)
 frame_poze.pack()
