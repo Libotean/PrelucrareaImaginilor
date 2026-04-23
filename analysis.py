@@ -173,6 +173,7 @@ def closing(matrix, kernel, iterations=1):
     return apply_morphology(temp, kernel, 'erode', iterations)
 
 def apply_fourier(matrix):
+    # daca ii fac un cerc in centru si ii aplic un filtru apoi ii dau reverse la fourier
     img_array = np.array([[p[0] for p in row] for row in matrix])
     f_transform = np.fft.fft2(img_array)
     
@@ -195,4 +196,3 @@ def apply_fourier(matrix):
         res_matrix.append(new_row)
         
     return res_matrix
-

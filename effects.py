@@ -1,3 +1,5 @@
+import numpy as np
+
 def inversare(matrix):
     """Creeaza negativul unei imagini RGB. Inverteste culorile scazand valoarea fiecarui canal (R, G, B) din 255.
 
@@ -180,3 +182,32 @@ def apply_sharpen_color(matrix):
             new_matrix[y][x] = new_pixel
             
     return new_matrix
+
+def apply_floyd_steinberg(matrix):
+    # Facem o copie de lucru deoarece algoritmul modifica valorile pe parcurs
+    # Avem nevoie de float pentru a nu pierde precizia erorii la impartiri
+    work_matrix = np.array(matrix, dtype=float)
+    height, width, _ = work_matrix.shape
+
+    for y in range(height):
+        for x in range(width):
+            for c in range(3):
+                old_pixel = work_matrix[y, x, c]
+                # Gasim cel mai apropiat maxim (in cazul binar, 0 sau 255)
+                new_pixel = 255 if old_pixel > 127 else 0
+                work_matrix[y, x, c] = new_pixel
+                
+                error = old_pixel - new_pixel
+                
+                # Distribuim eroarea conform matricei Floyd-Steinberg
+                if x + 1 < width:
+                    work_matrix[y, x + 1, c] += error * 7 / 16
+                if y + 1 < height:
+                    if x - 1 >= 0:
+                        work_matrix[y + 1, x - 1, c] += error * 3 / 16
+                    work_matrix[y + 1, x, c] += error * 5 / 16
+                    if x + 1 < width:
+                        work_matrix[y + 1, x + 1, c] += error * 1 / 16
+
+    # Convertim inapoi la uint8 si formatul tau de lista
+    return work_matrix.clip(0, 255).astype(np.uint8).tolist()

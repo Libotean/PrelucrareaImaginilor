@@ -1,7 +1,7 @@
 import math
 from image_io import read_bmp
 from conversions import mod_gray, convert_cmyk, convert_yuv, convert_yCbCr, convert_hsv
-from effects import inversare, binarize, get_channel, apply_neighbor_filter, apply_sharpen, apply_neighbor_filter_color, apply_sharpen_color
+from effects import inversare, binarize, get_channel, apply_neighbor_filter, apply_sharpen, apply_neighbor_filter_color, apply_sharpen_color, apply_floyd_steinberg
 from analysis import calcul_histograma, calcul_momente_imagine, calcul_proiectii, equalize_histogram, apply_morphology, opening, closing, apply_fourier
 from etichetare import directie_alungire, etichetare, extrage_obiect
 
@@ -270,6 +270,7 @@ menu_filtre_color.add_command(label="Mediere (Mean)", command=lambda: afiseaza(a
 menu_filtre_color.add_command(label="Median", command=lambda: afiseaza(apply_neighbor_filter_color(matrix, 'median'), canvas_2))
 menu_filtre_color.add_command(label="Minim", command=lambda: afiseaza(apply_neighbor_filter_color(matrix, 'min'), canvas_2))
 menu_filtre_color.add_command(label="Maxim", command=lambda: afiseaza(apply_neighbor_filter_color(matrix, 'max'), canvas_2))
+menu_filtre_color.add_command(label="Floyd-Steinberg", command=lambda: afiseaza(apply_floyd_steinberg(matrix), canvas_2))
 menu_filtre_color.add_command(label="Accentuare (Sharpen)", command=lambda: afiseaza(apply_sharpen_color(matrix), canvas_2))
 menu_efecte.add_cascade(label="Filtre Spatiale color", menu=menu_filtre_color)
 
