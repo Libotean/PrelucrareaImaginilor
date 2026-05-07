@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from conversions import mod_gray
 
 def calcul_histograma(matrix):
     """Calculeaza histograma de intensitate a unei imagini.

@@ -4,6 +4,7 @@ from conversions import mod_gray, convert_cmyk, convert_yuv, convert_yCbCr, conv
 from effects import inversare, binarize, get_channel, apply_neighbor_filter, apply_sharpen, apply_neighbor_filter_color, apply_sharpen_color, apply_floyd_steinberg
 from analysis import calcul_histograma, calcul_momente_imagine, calcul_proiectii, equalize_histogram, apply_morphology, opening, closing, apply_fourier
 from etichetare import directie_alungire, etichetare, extrage_obiect
+from lab8 import remove_gaussian_noise, laplacian_filter
 
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -273,6 +274,11 @@ menu_filtre_color.add_command(label="Maxim", command=lambda: afiseaza(apply_neig
 menu_filtre_color.add_command(label="Floyd-Steinberg", command=lambda: afiseaza(apply_floyd_steinberg(matrix), canvas_2))
 menu_filtre_color.add_command(label="Accentuare (Sharpen)", command=lambda: afiseaza(apply_sharpen_color(matrix), canvas_2))
 menu_efecte.add_cascade(label="Filtre Spatiale color", menu=menu_filtre_color)
+
+menu_lab8 = tk.Menu(menubar, tearoff=0)
+menu_lab8.add_command(label="Eliminare Zgomot Gaussian", command=lambda: afiseaza(remove_gaussian_noise(matrix), canvas_2))
+menu_lab8.add_command(label="Filtru Laplacian", command=lambda: afiseaza(laplacian_filter(matrix), canvas_2))
+menubar.add_cascade(label="Lab8", menu=menu_lab8)
 
 root.config(menu=menubar)
 
