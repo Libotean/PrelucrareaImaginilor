@@ -1,10 +1,12 @@
 import math
+import cv2
 from image_io import read_bmp
 from conversions import mod_gray, convert_cmyk, convert_yuv, convert_yCbCr, convert_hsv
 from effects import inversare, binarize, get_channel, apply_neighbor_filter, apply_sharpen, apply_neighbor_filter_color, apply_sharpen_color, apply_floyd_steinberg
 from analysis import calcul_histograma, calcul_momente_imagine, calcul_proiectii, equalize_histogram, apply_morphology, opening, closing, apply_fourier
 from etichetare import directie_alungire, etichetare, extrage_obiect
 from lab8 import remove_gaussian_noise, laplacian_filter
+from lab9 import edge_detect, apply_canny_edge_detection
 
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -187,8 +189,30 @@ def show_morphology(op_type):
         res = opening(bin_img, kernel)
     elif op_type == "close":
         res = closing(bin_img, kernel)
-
         
+    afiseaza(res, canvas_2)
+
+def show_edge_detection(filter_type):
+    if matrix is None: 
+        return
+
+    res = edge_detect(matrix, filter_type)
+    
+    afiseaza(res, canvas_2)
+
+def show_opencv_canny():
+    if matrix is None:
+        return
+    
+    img_np = np.array(matrix, dtype=np.uint8)
+    img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+    t_lower = 100
+    t_upper = 200
+    edges = cv2.Canny(img_bgr, t_lower, t_upper, L2gradient=True)
+    edges_rgb = cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB)
+    
+    res = edges_rgb.tolist()
+
     afiseaza(res, canvas_2)
 
 def center_window():
@@ -279,6 +303,22 @@ menu_lab8 = tk.Menu(menubar, tearoff=0)
 menu_lab8.add_command(label="Eliminare Zgomot Gaussian", command=lambda: afiseaza(remove_gaussian_noise(matrix), canvas_2))
 menu_lab8.add_command(label="Filtru Laplacian", command=lambda: afiseaza(laplacian_filter(matrix), canvas_2))
 menubar.add_cascade(label="Lab8", menu=menu_lab8)
+
+menu_contur = tk.Menu(menu_efecte, tearoff=0)
+menu_contur.add_command(label="Vertical Simplu", command=lambda: show_edge_detection(1))
+menu_contur.add_command(label="Orizontal Simplu", command=lambda: show_edge_detection(2))
+menu_contur.add_separator()
+menu_contur.add_command(label="Sobel Vertical", command=lambda: show_edge_detection(3))
+menu_contur.add_command(label="Sobel Orizontal", command=lambda: show_edge_detection(4))
+menu_contur.add_separator()
+menu_contur.add_command(label="Scharr Vertical", command=lambda: show_edge_detection(5))
+menu_contur.add_command(label="Scharr Orizontal", command=lambda: show_edge_detection(6))
+menu_contur.add_separator()
+menu_contur.add_command(label="Metoda Canny", command=lambda: afiseaza(apply_canny_edge_detection(matrix), canvas_2))
+menu_contur.add_separator()
+menu_contur.add_command(label="Canny (OpenCV) - Comparatie", command=show_opencv_canny)
+
+menu_efecte.add_cascade(label="Detectie Contur", menu=menu_contur)
 
 root.config(menu=menubar)
 
