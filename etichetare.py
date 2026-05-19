@@ -2,16 +2,16 @@ from collections import deque
 import math
 
 CULORI = [
-    (255, 0, 0),  # rosu
-    (0, 255, 0),  # verde
-    (0, 0, 255),  # albastru
-    (255, 255, 0),  # galben
-    (255, 0, 255),  # magenta
-    (0, 255, 255),  # cyan
-    (255, 128, 0),  # portocaliu
-    (128, 0, 255),  # mov
-    (0, 255, 128),  # verde-cyan
-    (255, 0, 128),  # roz
+    (255, 0, 0), # rosu
+    (0, 255, 0), # verde
+    (0, 0, 255), # albastru
+    (255, 255, 0), # galben
+    (255, 0, 255), # magenta
+    (0, 255, 255), # cyan
+    (255, 128, 0), # portocaliu
+    (128, 0, 255), # mov
+    (0, 255, 128), # verde-cyan
+    (255, 0, 128), # roz
 ]
 
 def gray(pixel):

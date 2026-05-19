@@ -5,7 +5,7 @@ from conversions import mod_gray, convert_cmyk, convert_yuv, convert_yCbCr, conv
 from effects import inversare, binarize, get_channel, apply_neighbor_filter, apply_sharpen, apply_neighbor_filter_color, apply_sharpen_color, apply_floyd_steinberg
 from analysis import calcul_histograma, calcul_momente_imagine, calcul_proiectii, equalize_histogram, apply_morphology, opening, closing, apply_fourier
 from etichetare import directie_alungire, etichetare, extrage_obiect
-from lab8 import remove_gaussian_noise, laplacian_filter
+from lab8 import remove_gaussian_noise, laplacian_filter, calculate_snr, calculate_snr_2
 from lab9 import edge_detect, apply_canny_edge_detection
 
 import tkinter as tk
@@ -164,7 +164,7 @@ def selectie_obiect(event=None):
         return
 
     eticheta = int(dropdown_etichete.get())
-    obiect   = extrage_obiect(matrix, labels_matrix, eticheta)
+    obiect = extrage_obiect(matrix, labels_matrix, eticheta)
     afiseaza(obiect, canvas_2)
 
     unghi_rad, unghi_grade = directie_alungire(obiect)
@@ -191,6 +191,23 @@ def show_morphology(op_type):
         res = closing(bin_img, kernel)
         
     afiseaza(res, canvas_2)
+
+def show_snr():
+    if matrix is None: return
+
+    snr_simplu = calculate_snr(matrix)
+
+    matrix_filtrata = remove_gaussian_noise(matrix)
+    snr_comparativ = calculate_snr_2(matrix, matrix_filtrata)
+
+    text = tk.Text(frame_analysis, font=("Courier", 11), bg="#1e1e1e", fg="white")
+    text.pack(fill="both", expand=True)
+    text.insert("end", "ANALIZA SNR (Signal-to-Noise Ratio)\n\n")
+    text.insert("end", f"SNR Imagine Originala: {snr_simplu:.2f} dB\n")
+    text.insert("end", f"SNR dupa Filtru Gaussian: {snr_comparativ:.2f} dB\n")
+    text.insert("end", "\nInterpretare:\n- Un SNR mai mare indica un semnal mai clar.\n")
+    text.insert("end", "- In comparatie, valoarea arata cat de mult zgomot a fost eliminat de filtru.")
+    text.config(state="disabled")
 
 def show_edge_detection(filter_type):
     if matrix is None: 
@@ -302,6 +319,7 @@ menu_efecte.add_cascade(label="Filtre Spatiale color", menu=menu_filtre_color)
 menu_lab8 = tk.Menu(menubar, tearoff=0)
 menu_lab8.add_command(label="Eliminare Zgomot Gaussian", command=lambda: afiseaza(remove_gaussian_noise(matrix), canvas_2))
 menu_lab8.add_command(label="Filtru Laplacian", command=lambda: afiseaza(laplacian_filter(matrix), canvas_2))
+menu_lab8.add_command(label="Analiza SNR", command=show_snr)
 menubar.add_cascade(label="Lab8", menu=menu_lab8)
 
 menu_contur = tk.Menu(menu_efecte, tearoff=0)

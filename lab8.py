@@ -77,11 +77,20 @@ def calculate_snr(matrix):
     snr = 10 * math.log10((signal_mean**2) / (noise_mean**2))
     return snr
 
-# def calculate_snr_2(matrix1, matrix2):
-#     height = len(matrix1)
-#     width = len(matrix1[0]) 
+def calculate_snr_2(matrix1, matrix2):
+    height = len(matrix1)
+    width = len(matrix1[0]) 
 
-#     signal_sum, noise_sum = 0, 0
+    signal_sum, noise_sum = 0, 0
 
-#     for y in range(height):
-#         for x in range(width):
+    for y in range(height):
+        for x in range(width):
+            v1 = sum(matrix1[y][x]) / 3
+            v2 = sum(matrix2[y][x]) / 3
+            signal_sum += abs(v1-v2)
+            noise_sum += abs(v1)
+    
+    mean_signal, mean_noise = signal_sum/(width*height), noise_sum/(width*height)
+    if mean_noise == 0: return 0
+    snr = 10 * math.log10((mean_signal**2) / (mean_noise**2))
+    return snr
