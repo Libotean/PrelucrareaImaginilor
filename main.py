@@ -7,6 +7,7 @@ from analysis import calcul_histograma, calcul_momente_imagine, calcul_proiectii
 from etichetare import directie_alungire, etichetare, extrage_obiect
 from lab8 import remove_gaussian_noise, laplacian_filter, calculate_snr, calculate_snr_2
 from lab9 import edge_detect, apply_canny_edge_detection
+from lab10 import apply_laplacian_of_Gaussian
 
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -337,6 +338,10 @@ menu_contur.add_separator()
 menu_contur.add_command(label="Canny (OpenCV) - Comparatie", command=show_opencv_canny)
 
 menu_efecte.add_cascade(label="Detectie Contur", menu=menu_contur)
+
+menu_lab10 = tk.Menu(menubar, tearoff=0)
+menu_lab10.add_command(label="Laplacianul Gaussianului", command=lambda: afiseaza(apply_laplacian_of_Gaussian(matrix), canvas_2))
+menubar.add_cascade(label="Lab10", menu=menu_lab10)
 
 root.config(menu=menubar)
 
