@@ -7,7 +7,7 @@ from analysis import calcul_histograma, calcul_momente_imagine, calcul_proiectii
 from etichetare import directie_alungire, etichetare, extrage_obiect
 from lab8 import remove_gaussian_noise, laplacian_filter, calculate_snr, calculate_snr_2
 from lab9 import edge_detect, apply_canny_edge_detection
-from lab10 import apply_laplacian_of_Gaussian
+from lab10 import apply_laplacian_of_Gaussian, lzw_comprimare, lzw_decomprimare, salveaza_imagine_lzw, incarca_imagine_lzw
 
 import tkinter as tk
 import tkinter.ttk as ttk
@@ -233,6 +233,47 @@ def show_opencv_canny():
 
     afiseaza(res, canvas_2)
 
+def comanda_meniu_salveaza():
+    if 'matrix' not in globals() or matrix is None:
+        tk.messagebox.showwarning("Atentie", "Nu exista nicio imagine deschisa pentru a fi comprimata!")
+        return
+        
+    cale = filedialog.asksaveasfilename(
+        defaultextension=".lzw",
+        filetypes=[("Fisiere LZW", "*.lzw")],
+        title="Salveaza imaginea comprimata LZW"
+    )
+    
+    if cale:
+        try:
+            salveaza_imagine_lzw(cale, matrix) 
+            tk.messagebox.showinfo("Succes", "Imaginea a fost comprimata si salvata ca .lzw!")
+        except Exception as e:
+            tk.messagebox.showerror("Eroare", f"Eroare la salvare: {str(e)}")
+
+
+def comanda_meniu_deschide():
+    global matrix
+    
+    cale = filedialog.askopenfilename(
+        filetypes=[("Fisiere LZW", "*.lzw")],
+        title="Deschide fisier comprimat LZW"
+    )
+    
+    if cale:
+        try:
+            matrix = incarca_imagine_lzw(cale)
+            
+            afiseaza(matrix, canvas_2)
+            
+            filename = cale.split("/")[-1]
+            h = len(matrix)
+            w = len(matrix[0]) if h > 0 else 0
+            status_var.set(f"{filename} | {w} x {h} px | Decomprimat LZW")
+            
+        except Exception as e:
+            tk.messagebox.showerror("Eroare", f"Eroare la deschidere: {str(e)}")
+
 def center_window():
     root.update_idletasks()
     w = root.winfo_width()
@@ -342,6 +383,11 @@ menu_efecte.add_cascade(label="Detectie Contur", menu=menu_contur)
 menu_lab10 = tk.Menu(menubar, tearoff=0)
 menu_lab10.add_command(label="Laplacianul Gaussianului", command=lambda: afiseaza(apply_laplacian_of_Gaussian(matrix), canvas_2))
 menubar.add_cascade(label="Lab10", menu=menu_lab10)
+
+menu_lzw = tk.Menu(menubar, tearoff=0)
+menu_lzw.add_command(label="Comprima imaginea curenta (.lzw)", command=comanda_meniu_salveaza)
+menu_lzw.add_command(label="Deschide si afiseaza fisier (.lzw)", command=comanda_meniu_deschide)
+menubar.add_cascade(label="Compresie LZW", menu=menu_lzw)
 
 root.config(menu=menubar)
 

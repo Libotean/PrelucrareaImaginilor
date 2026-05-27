@@ -184,8 +184,6 @@ def apply_sharpen_color(matrix):
     return new_matrix
 
 def apply_floyd_steinberg(matrix):
-    # Facem o copie de lucru deoarece algoritmul modifica valorile pe parcurs
-    # Avem nevoie de float pentru a nu pierde precizia erorii la impartiri
     work_matrix = np.array(matrix, dtype=float)
     height, width, _ = work_matrix.shape
 
@@ -193,13 +191,11 @@ def apply_floyd_steinberg(matrix):
         for x in range(width):
             for c in range(3):
                 old_pixel = work_matrix[y, x, c]
-                # Gasim cel mai apropiat maxim (in cazul binar, 0 sau 255)
                 new_pixel = 255 if old_pixel > 127 else 0
                 work_matrix[y, x, c] = new_pixel
                 
                 error = old_pixel - new_pixel
                 
-                # Distribuim eroarea conform matricei Floyd-Steinberg
                 if x + 1 < width:
                     work_matrix[y, x + 1, c] += error * 7 / 16
                 if y + 1 < height:
@@ -209,5 +205,4 @@ def apply_floyd_steinberg(matrix):
                     if x + 1 < width:
                         work_matrix[y + 1, x + 1, c] += error * 1 / 16
 
-    # Convertim inapoi la uint8 si formatul tau de lista
     return work_matrix.clip(0, 255).astype(np.uint8).tolist()
